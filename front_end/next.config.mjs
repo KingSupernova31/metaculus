@@ -4,12 +4,15 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin();
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://host.docker.internal:8000";
 
 const AWS_STORAGE_BUCKET_NAME = process.env.AWS_STORAGE_BUCKET_NAME;
 
 /** @type {import("next").NextConfig} */
 const nextConfig = {
+  httpAgentOptions: {
+    keepAlive: false,
+  },
   trailingSlash: true,
   env: {
     API_BASE_URL,
