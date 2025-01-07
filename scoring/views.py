@@ -1,3 +1,4 @@
+import time
 import numpy as np
 from django.db.models import Q
 from django.views.decorators.cache import cache_page
@@ -148,6 +149,8 @@ def user_medals(
 def medal_contributions(
     request: Request,
 ):
+    tm = time.time()
+
     user_id = request.GET.get("userId", None)
     user = get_object_or_404(User, pk=user_id)
     project_id = request.GET.get("projectId", get_site_main_project().id)
@@ -184,9 +187,23 @@ def medal_contributions(
     else:
         leaderboard = leaderboards.first()
 
+    print(f"medal_contributions #1: {round(time.time() - tm, 3)}s")
+    tm = time.time()
+
     contributions = get_contributions(user, leaderboard)
+
+    print(f"get_contributions: {round(time.time() - tm, 3)}s")
+    tm = time.time()
+
     entries = leaderboard.entries.select_related("user").all()
+
+    print(f"entries: {round(time.time() - tm, 3)}s")
+    tm = time.time()
+
     leaderboard_entry = next((e for e in entries if e.user == user), None)
+
+    print(f"leaderboard_entry: {round(time.time() - tm, 3)}s")
+    tm = time.time()
 
     return_data = {
         "leaderboard_entry": LeaderboardEntrySerializer(leaderboard_entry).data,
@@ -194,6 +211,9 @@ def medal_contributions(
         "leaderboard": LeaderboardSerializer(leaderboard).data,
         "user_id": user_id,
     }
+
+    print(f"return_data: {round(time.time() - tm, 3)}s")
+
     return Response(return_data)
 
 

@@ -1,4 +1,5 @@
 import csv
+import time
 from collections import defaultdict
 from dataclasses import dataclass
 from decimal import Decimal
@@ -530,71 +531,64 @@ class Contribution:
     comment: Comment | None = None
 
 
-import time
-
-class ExecutionTimer:
-    def __init__(self, name="Block"):
-        self.name = name
-
-    def __enter__(self):
-        self.start_time = time.perf_counter()
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.end_time = time.perf_counter()
-        self.execution_time = round(self.end_time - self.start_time, 3)
-        print(f"{self.name} execution time: {self.execution_time} seconds")
-
-
-
 def get_contribution_question_writing(
     user: User, leaderboard: Leaderboard, questions: Question.objects
 ):
-    with ExecutionTimer("#1"):
-        forecaster_ids_for_post = defaultdict(set)
+    tm = time.time()
 
-        questions = (
-            questions.prefetch_related("related_posts__post")
-            # Fetch only authored posts
-            .filter(related_posts__post__author_id=user.id)
+    forecaster_ids_for_post = defaultdict(set)
+
+    questions = (
+        questions.prefetch_related("related_posts__post")
+        # Fetch only authored posts
+        .filter(related_posts__post__author_id=user.id)
+    )
+
+    # Fetch forecasts during leaderboard period
+    forecasts = Forecast.objects.filter(question__in=questions)
+
+    if leaderboard.start_time:
+        forecasts = forecasts.filter(start_time__gte=leaderboard.start_time)
+
+    if leaderboard.end_time:
+        forecasts = forecasts.filter(start_time__lte=leaderboard.end_time)
+
+    # Fetch only 2 target fields
+    forecasts = forecasts.only("question_id", "author_id")
+
+    # Generate Question<>Forecasters map
+    question_forecasters_map = defaultdict(set)
+
+    for forecast in forecasts.iterator(chunk_size=500):
+        question_forecasters_map[forecast.question_id].add(forecast.author_id)
+
+    print(f"get_contribution_question_writing #1: {round(time.time() - tm, 3)}s")
+    tm = time.time()
+
+    # Loop over chunked questions
+    for question in questions.iterator(chunk_size=500):
+        post = question.get_post()
+        forecaster_ids_for_post[post] |= question_forecasters_map[question.id]
+
+    print(f"get_contribution_question_writing #2: {round(time.time() - tm, 3)}s")
+    tm = time.time()
+
+    contributions: list[Contribution] = []
+    for post, forecaster_ids in forecaster_ids_for_post.items():
+        contribution = Contribution(
+            score=len(forecaster_ids),
+            post=post,
         )
+        contributions.append(contribution)
 
-        # Fetch forecasts during leaderboard period
-        forecasts = Forecast.objects.filter(question__in=list(questions))
+    print(f"get_contribution_question_writing #3: {round(time.time() - tm, 3)}s")
+    tm = time.time()
 
-        if leaderboard.start_time:
-            forecasts = forecasts.filter(start_time__gte=leaderboard.start_time)
+    # h_index = decimal_h_index([c.score / 10 for c in contributions])
+    contributions = sorted(contributions, key=lambda c: c.score, reverse=True)
 
-        if leaderboard.end_time:
-            forecasts = forecasts.filter(start_time__lte=leaderboard.end_time)
-
-        # Fetch only 2 target fields
-        forecasts = forecasts.only("question_id", "author_id")
-
-        # Generate Question<>Forecasters map
-        question_forecasters_map = defaultdict(set)
-
-    with ExecutionTimer("#2"):
-        for forecast in forecasts:
-            question_forecasters_map[forecast.question_id].add(forecast.author_id)
-
-    with ExecutionTimer("#3"):
-        # Loop over chunked questions
-        for question in questions:
-            post = question.get_post()
-            forecaster_ids_for_post[post] |= question_forecasters_map[question.id]
-
-    with ExecutionTimer("#4"):
-        contributions: list[Contribution] = []
-        for post, forecaster_ids in forecaster_ids_for_post.items():
-            contribution = Contribution(
-                score=len(forecaster_ids),
-                post=post,
-            )
-            contributions.append(contribution)
-
-        # h_index = decimal_h_index([c.score / 10 for c in contributions])
-        contributions = sorted(contributions, key=lambda c: c.score, reverse=True)
+    print(f"get_contribution_question_writing #4: {round(time.time() - tm, 3)}s")
+    tm = time.time()
 
     return contributions
 
