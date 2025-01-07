@@ -1,5 +1,5 @@
-import time
 import functools
+import time
 
 
 def print_runtime(func):
@@ -13,3 +13,7 @@ def print_runtime(func):
         return result
 
     return wrapper
+
+
+def show_toolbar_callback(request):
+    return request.user.is_superuser
