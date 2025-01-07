@@ -50,7 +50,7 @@ ADD pyproject.toml pyproject.toml
 RUN poetry config virtualenvs.create false \
     && python -m venv venv \
     && . venv/bin/activate \
-    && poetry install --without dev
+    && poetry install
 
 
 FROM base AS frontend_deps
