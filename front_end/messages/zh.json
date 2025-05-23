@@ -1252,5 +1252,6 @@
   "inTheNews": "新闻报道",
   "fileSizeExceedsLimit": "文件大小超出{value}MB限制",
   "errorUploadingImage": "上传图片失败",
-  "currentForecast": "当前预报"
+  "currentForecast": "当前预报",
+  "selectAGraphType": "选择图类型"
 }

@@ -1249,5 +1249,6 @@
   "inTheNews": "En las Noticias",
   "fileSizeExceedsLimit": "El tamaño del archivo supera el límite de {value}MB",
   "errorUploadingImage": "Error al subir la imagen",
-  "currentForecast": "Pronóstico Actual"
+  "currentForecast": "Pronóstico Actual",
+  "selectAGraphType": "Seleccione un tipo de gráfico"
 }

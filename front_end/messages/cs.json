@@ -1249,5 +1249,6 @@
   "inTheNews": "Ve zprávách",
   "fileSizeExceedsLimit": "Velikost souboru překračuje limit {value}MB",
   "errorUploadingImage": "Nepodařilo se nahrát obrázek",
-  "currentForecast": "Aktuální předpověď"
+  "currentForecast": "Aktuální předpověď",
+  "selectAGraphType": "Vyberte typ grafu"
 }

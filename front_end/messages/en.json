@@ -1245,5 +1245,6 @@
   "indexTimeline": "Index Timeline",
   "fileSizeExceedsLimit": "File size exceeds {value}MB limit",
   "errorUploadingImage": "Failed to upload image",
-  "currentForecast": "Current Forecast"
+  "currentForecast": "Current Forecast",
+  "selectAGraphType": "Select a graph type"
 }
